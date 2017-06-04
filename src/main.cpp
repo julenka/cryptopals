@@ -7,8 +7,10 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 //
-// Set 1
+// Challenge 1
 //
 
 // parse a two-character hex value (for example, f8) into a byte
@@ -117,7 +119,7 @@ void set1_challenge1() {
 }
 
 //
-// Set 2
+// Challenge 2
 //
 
 void xor_buffers(const uint8_t *bytes1, const uint8_t *bytes2, uint8_t *output, size_t num_bytes) {
@@ -177,45 +179,45 @@ void set1_challenge2() {
 }
 
 //
-// Set 3
+// Challenge 3
 //
 
 // The hex encoded string:
 // 1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736
 // ... has been XOR'd against a single character. Find the key, decrypt the message.
 void set1_challenge3() {
-    std::string hex1 = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
+    string hex1 = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
     const size_t NUM_BYTES = 34;
     uint8_t bytes1[NUM_BYTES];
     hex_decode(hex1.c_str(), bytes1, sizeof(bytes1));
 
-    std::vector<std::string> decodings;
+    vector<string> decodings;
     for (uint8_t possible_char = 0; possible_char < 255; possible_char++)
     {
         uint8_t result_bytes[NUM_BYTES + 1] = { 0 };
         xor_buffer(bytes1, possible_char, result_bytes, NUM_BYTES);
-        decodings.push_back(std::string((char*)result_bytes));
+        decodings.push_back(string((char*)result_bytes));
     }
 
 
-    std::sort(decodings.begin(), decodings.end(), [](std::string a, std::string b) {
-        return std::count(a.begin(), a.end(), ' ') > std::count(b.begin(), b.end(), ' ');
+    sort(decodings.begin(), decodings.end(), [](string a, string b) {
+        return count(a.begin(), a.end(), ' ') > count(b.begin(), b.end(), ' ');
     });
 
     for (size_t i = 0; i < 10; i++)
     {
-        std::cout << decodings[i] << std::endl;
+        cout << decodings[i] << endl;
 
     }
 }
 
 //
-// Set 4
+// Challenge 4
 //
 
 void set1_challenge4() {
-    std::ifstream infile("data/4.txt");
-    std::string line;
+    ifstream infile("data/4.txt");
+    string line;
     const size_t NUM_BYTES = 30;
     while (infile >> line) {
         // convert the line into bytes A
@@ -228,19 +230,21 @@ void set1_challenge4() {
         {
             uint8_t decoded[NUM_BYTES + 1] = { 0 };
             xor_buffer(encoded, possible_char, decoded, NUM_BYTES);
-            std::string decoded_str((char*)decoded);
-            if (std::count(decoded_str.begin(), decoded_str.end(), ' ') > 4) {
-                std::cout << line << "\t" << decoded_str << std::endl;
+            string decoded_str((char*)decoded);
+            if (count(decoded_str.begin(), decoded_str.end(), ' ') > 4) {
+                cout << line << "\t" << decoded_str << endl;
             }
         }
     }
 }
 
 int main(int argc, char *argv[], char *envp[]) {
-    //set1_challenge1();
-    //test_parse_byte_hex();
-    //test_base64_encode();
-    //test_print_hex();
-    //set1_challenge3();
-    set1_challenge4();
+    // set1_challenge1();
+    // test_parse_byte_hex();
+    // test_base64_encode();
+    // test_print_hex();
+    // set1_challenge3();
+    // set1_challenge4();
+    cout << "Press enter to exit...";
+    cin.ignore();
 }
