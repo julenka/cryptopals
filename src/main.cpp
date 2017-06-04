@@ -136,6 +136,16 @@ void xor_buffer(const uint8_t *bytes1, const uint8_t byte2, uint8_t *output, siz
     }
 }
 
+void xor_buffer_repeating(const uint8_t *input, const uint8_t *keys, uint8_t *output, size_t input_size, size_t key_size) {
+    int key_index = 0;
+    for (size_t i = 0; i < input_size; i++) {
+        uint8_t current_key = keys[key_index];
+        output[i] = input[i] ^ current_key;
+        key_index++;
+        key_index %= key_size;
+    }
+}
+
 void sprint_hex(char* output, size_t output_len, uint8_t *bytes, size_t num_bytes) {
     for (size_t i = 0; i < num_bytes; i++)
     {
@@ -238,13 +248,41 @@ void set1_challenge4() {
     }
 }
 
+//
+// Challenge 5
+//
+
+void set1_challenge5() {
+    string line1 = "Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal";
+    string key = "ICE";
+    // Encrypt under key 'ICE' using repeating-key XOR
+    // in repeating-key XOR, sequentially apply each byte of the key, first byte of plaintext will
+    // be XOR'd sgainst I, next C, next E, etc.
+    auto encrypt = [key](string input)
+    {
+        const char* inputC = input.c_str();
+        string output(input);
+        xor_buffer_repeating((const uint8_t*)(inputC), (const uint8_t*)key.c_str(), (uint8_t*)output.c_str(), input.length(), key.length());
+
+        return output;
+    };
+
+    string line1Encrypted = encrypt(line1);
+    print_hex((uint8_t*)line1Encrypted.c_str(), line1Encrypted.length());
+    // Should match
+    // 0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
+    // a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
+
+}
+
 int main(int argc, char *argv[], char *envp[]) {
     // set1_challenge1();
     // test_parse_byte_hex();
     // test_base64_encode();
     // test_print_hex();
     // set1_challenge3();
-    // set1_challenge4();
-    cout << "Press enter to exit...";
+    //set1_challenge4();
+    set1_challenge5();
+    cout << "Press any key to continue...";
     cin.ignore();
 }
