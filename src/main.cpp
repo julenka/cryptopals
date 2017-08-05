@@ -230,9 +230,9 @@ void set1_challenge4() {
     string line;
     const size_t NUM_BYTES = 30;
     while (infile >> line) {
-        // convert the line into bytes A
+        // convert the line into bytes
         // xor against every possible character
-        // if C ^ p == A then print the result
+        // Look for strings that have a good distribution of characters
         uint8_t encoded[NUM_BYTES] = { 0 };
         hex_decode(line.c_str(), encoded, sizeof(encoded));
 
@@ -252,26 +252,98 @@ void set1_challenge4() {
 // Challenge 5
 //
 
+string encrypt_repeating_xor(const string& input, const string& key) {
+    const char* inputC = input.c_str();
+    string output(input);
+    xor_buffer_repeating((const uint8_t*)(inputC), (const uint8_t*)key.c_str(), (uint8_t*)output.c_str(), input.length(), key.length());
+    return output;
+}
+
+// Encrypt under key 'ICE' using repeating-key XOR
+// in repeating-key XOR, sequentially apply each byte of the key, first byte of plaintext will
+// be XOR'd sgainst I, next C, next E, etc.
 void set1_challenge5() {
     string line1 = "Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal";
     string key = "ICE";
-    // Encrypt under key 'ICE' using repeating-key XOR
-    // in repeating-key XOR, sequentially apply each byte of the key, first byte of plaintext will
-    // be XOR'd sgainst I, next C, next E, etc.
-    auto encrypt = [key](string input)
-    {
-        const char* inputC = input.c_str();
-        string output(input);
-        xor_buffer_repeating((const uint8_t*)(inputC), (const uint8_t*)key.c_str(), (uint8_t*)output.c_str(), input.length(), key.length());
-
-        return output;
-    };
-
-    string line1Encrypted = encrypt(line1);
-    print_hex((uint8_t*)line1Encrypted.c_str(), line1Encrypted.length());
+    string line1Encrypted = encrypt_repeating_xor(line1, key);
     // Should match
     // 0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
     // a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
+    print_hex((uint8_t*)line1Encrypted.c_str(), line1Encrypted.length());
+
+}
+
+//
+// Challenge 6
+//
+
+// Compute the hamming distance (number of differing *bits*) between two strings
+// Assumes that str1 and str2 have same length
+// Hamming distance between "this is a test" and "wokka wokka!!!" should be 37
+int compute_edit_distance(const uint8_t* str1, const uint8_t* str2, const uint8_t str1_len) {
+    int result = 0;
+    for (int i = 0; i < str1_len; i++)
+    {
+        uint8_t diff = str1[i] ^ str2[i];
+        for (int j = 0; j < 8; j++)
+        {
+            if (diff & 0x1) {
+                result++;
+            }
+            diff >>= 1;
+        }
+    }
+    return result;
+}
+
+#include <queue>
+void set1_challenge6() {
+    ifstream is("data/6.txt", ifstream::binary);
+    is.seekg(0, is.end);
+    streamoff ctLength = is.tellg();
+    is.seekg(0, is.beg);
+
+    char* ct = new char[ctLength];
+    is.read(ct, ctLength);
+
+    struct info
+    {
+        float editD;
+        int size;
+    };
+
+    struct comparator {
+        bool operator()(info i, info j) {
+            return i.editD > j.editD;
+        }
+    };
+    priority_queue<info, std::vector<info>, comparator> likelyKeys;
+
+    for (int keysize = 2; keysize < 40; keysize++) {
+        uint8_t* firstBuf = (uint8_t*) ct;
+        uint8_t* secondBuf = firstBuf + keysize;
+        float curEditD = compute_edit_distance(firstBuf, secondBuf, keysize) / (float) keysize;
+        likelyKeys.push(info{ curEditD, keysize });
+    }
+
+    // Key is probably one of the first few elements
+    
+    // Test out a single keysize, let's guess it's the first one
+    int blockSize = likelyKeys.top().size;
+
+    // Make a block that's the first byte of every block, a byte that's the second 
+    // byte of every block.
+    int blockIndex = 0;
+    // make the block
+    std::vector<uint8_t> block;
+    for (int i = 0; i < ctLength / blockSize; i += blockSize)
+    {
+        int byteIndex = i * blockSize + blockIndex;
+        if (byteIndex < ctLength) {
+            block.push_back(ct[byteIndex]);
+        }
+    }
+
 
 }
 
@@ -282,7 +354,8 @@ int main(int argc, char *argv[], char *envp[]) {
     // test_print_hex();
     // set1_challenge3();
     //set1_challenge4();
-    set1_challenge5();
+    //set1_challenge5();
+    set1_challenge6();
     cout << "Press any key to continue...";
     cin.ignore();
 }
