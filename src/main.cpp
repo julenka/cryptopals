@@ -1,5 +1,7 @@
 #include <algorithm>
+#if defined(WIN32) 
 #include <conio.h>
+#endif
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -149,7 +151,7 @@ void xor_buffer_repeating(const uint8_t *input, const uint8_t *keys, uint8_t *ou
 void sprint_hex(char* output, size_t output_len, uint8_t *bytes, size_t num_bytes) {
     for (size_t i = 0; i < num_bytes; i++)
     {
-        sprintf_s(output + i * 2, output_len - i * 2, "%02x", bytes[i]);
+        sprintf(output + i * 2, "%02x", bytes[i]);
     }
 }
 
@@ -299,6 +301,7 @@ int compute_edit_distance(const uint8_t* str1, const uint8_t* str2, const uint8_
 #include <queue>
 void set1_challenge6() {
     ifstream is("data/6.txt", ifstream::binary);
+    // Read contents of data/6.txt into char*, also save off length
     is.seekg(0, is.end);
     streamoff ctLength = is.tellg();
     is.seekg(0, is.beg);
@@ -354,8 +357,8 @@ int main(int argc, char *argv[], char *envp[]) {
     // test_print_hex();
     // set1_challenge3();
     //set1_challenge4();
-    //set1_challenge5();
-    set1_challenge6();
+    set1_challenge5();
+    //set1_challenge6();
     cout << "Press any key to continue...";
     cin.ignore();
 }
