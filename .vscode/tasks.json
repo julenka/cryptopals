@@ -1,0 +1,26 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "taskName": "g++",
+            "command": "g++ -g -std=c++11 ${workspaceRoot}/src/main.cpp",
+            "type": "shell"
+        },
+        {
+            "type": "shell",
+            "group": "test",
+            "taskName": "loop",
+            "dependsOn": "g++",
+            "command": "${workspaceRoot}/a.out",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}
