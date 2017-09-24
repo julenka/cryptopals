@@ -496,6 +496,19 @@ void set1_challenge6() {
 
 }
 
+//The Base64 - encoded content in the file "7.txt" has been encrypted via AES - 128 in ECB mode under the key
+//"YELLOW SUBMARINE".
+//(case-sensitive, without the quotes; exactly 16 characters; I like "YELLOW SUBMARINE" because it's exactly 16 bytes long, and now you do too). 
+//  Decrypt it.You know the key, after all.
+////  Easiest way : use OpenSSL::Cipher and give it AES - 128 - ECB as the cipher.
+//Do this with code.
+//You can obviously decrypt this using the OpenSSL command - line tool, but we're having you get ECB working in code for a reason. You'll need it a lot later on, and not just for attacking ECB.
+void set1_challenge7() {
+	// Every line is base 64 encoded 
+	// use while (infile >> line) to read line by line, then decrypt. 
+	// OpenSSL::Cipher
+}
+
 int main(int argc, char *argv[], char *envp[]) {
     // test_util_parse_byte_hex();
     // test_util_base64_encode();
