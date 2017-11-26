@@ -10,6 +10,12 @@
 #include <string>
 #include <vector>
 
+// OpenSSL includes
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <openssl/aes.h>
+#include <openssl/conf.h>
+
 using namespace std;
 
 // Allow us to use sprintf
@@ -496,19 +502,80 @@ void set1_challenge6() {
 
 }
 
-//The Base64 - encoded content in the file "7.txt" has been encrypted via AES - 128 in ECB mode under the key
-//"YELLOW SUBMARINE".
-//(case-sensitive, without the quotes; exactly 16 characters; I like "YELLOW SUBMARINE" because it's exactly 16 bytes long, and now you do too). 
-//  Decrypt it.You know the key, after all.
-////  Easiest way : use OpenSSL::Cipher and give it AES - 128 - ECB as the cipher.
-//Do this with code.
-//You can obviously decrypt this using the OpenSSL command - line tool, but we're having you get ECB working in code for a reason. You'll need it a lot later on, and not just for attacking ECB.
-void set1_challenge7() {
-    // Every line is base 64 encoded 
-    // use while (infile >> line) to read line by line, then decrypt. 
-    // OpenSSL::Cipher
+
+typedef unsigned char byte;
+static const unsigned int KEY_SIZE = 128;
+static const unsigned int BLOCK_SIZE = 128;
+using EVP_CIPHER_CTX_free_ptr = std::unique_ptr<EVP_CIPHER_CTX, decltype(&::EVP_CIPHER_CTX_free)>;
+
+// ctext - cipher text
+// rtext - recovered text
+void aes_decrypt(const byte key[KEY_SIZE], const byte iv[BLOCK_SIZE], const string& ctext, string& rtext)
+{
+    EVP_CIPHER_CTX_free_ptr ctx(EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free);
+    int rc = EVP_DecryptInit_ex(ctx.get(), EVP_aes_128_ecb(), NULL, key, iv);
+    if (rc != 1)
+        throw std::runtime_error("EVP_DecryptInit_ex failed");
+
+    // Recovered text contracts upto BLOCK_SIZE
+    rtext.resize(ctext.size());
+    int out_len1 = (int)rtext.size();
+
+    rc = EVP_DecryptUpdate(ctx.get(), (byte*)&rtext[0], &out_len1, (const byte*)&ctext[0], (int)ctext.size());
+    if (rc != 1)
+        throw std::runtime_error("EVP_DecryptUpdate failed");
+
+    int out_len2 = (int)rtext.size() - out_len1;
+    rc = EVP_DecryptFinal_ex(ctx.get(), (byte*)&rtext[0] + out_len1, &out_len2);
+    if (rc != 1) 
+    {
+        char error_string[128];
+        ERR_error_string_n(ERR_get_error(), error_string, 128);
+        std::cout << "Error during EVP_DecryptFinal_ex: " << error_string << std::endl;
+        throw std::runtime_error("EVP_DecryptFinal_ex failed");
+    }
+
+    // Set recovered text size now that we know it
+    rtext.resize(out_len1 + out_len2);
 }
 
+// The Base64 - encoded content in the file "7.txt" has been encrypted via AES - 128 in ECB mode under the key
+// "YELLOW SUBMARINE". (case-sensitive, without the quotes; exactly 16 characters;
+// I like "YELLOW SUBMARINE" because it's exactly 16 bytes long, and now you do too). 
+//
+// Decrypt it.You know the key, after all.
+// Easiest way : use OpenSSL::Cipher and give it AES - 128 - ECB as the cipher.
+// Do this with code.
+// You can obviously decrypt this using the OpenSSL command - line tool, but we're having you get ECB working in code for a reason. You'll need it a lot later on, and not just for attacking ECB.
+
+void set1_challenge7() {
+    
+
+    ifstream infile("data/7.txt");
+    string line;
+    const size_t NUM_BYTES = 30;
+    string ptext = "";
+    // Every line is base 64 encoded 
+    // use while (infile >> line) to read line by line, then decrypt. 
+    while (infile >> line) {
+        ptext += util_base64_decode(line.c_str(), line.length());
+    }
+
+    // Initialize OpenSSL
+    // Followed example at https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
+    EVP_add_cipher(EVP_aes_128_ecb());
+    ERR_load_crypto_strings();
+    byte key[128] = "YELLOW SUBMARINE";
+    byte iv[128] = { 0 };
+
+    string rtext = "";
+    // base64 decode it
+    aes_decrypt(key, iv, ptext, rtext);
+    std::cout << "Original message:\n" << ptext << std::endl;
+    std::cout << "Recovered message:\n" << rtext << std::endl;
+}
+
+// TO DO: Factor out the code used in set1_challenge7 as well as the base64 stuff into common code.
 int main(int argc, char *argv[], char *envp[]) {
     // test_util_parse_byte_hex();
     // test_util_base64_encode();
@@ -524,7 +591,8 @@ int main(int argc, char *argv[], char *envp[]) {
     // 0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272
     // a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f
     // set1_challenge5();
-    set1_challenge6();
+    //set1_challenge6();
+    set1_challenge7();
     cout << "Press any key to continue...";
     cin.ignore();
 }
