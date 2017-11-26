@@ -429,12 +429,12 @@ void set1_challenge6() {
     priority_queue<info, std::vector<info>, comparator> likelyKeys;
 
     for (int keysize = 2; keysize < 40; keysize++) {
-        uint8_t* firstBuf = (uint8_t*) encrypted;
+        uint8_t* firstBuf = (uint8_t*)encrypted;
         float averageEditD = 0;
         for (int i = 1; i < 6; i++)
         {
             uint8_t* secondBuf = firstBuf + keysize * i;
-            averageEditD += util_compute_edit_distance(firstBuf, secondBuf, keysize) / (float) keysize;
+            averageEditD += util_compute_edit_distance(firstBuf, secondBuf, keysize) / (float)keysize;
         }
         averageEditD /= 5;
         likelyKeys.push(info{ averageEditD, keysize });
@@ -453,7 +453,7 @@ void set1_challenge6() {
         // 7. Solve each chunk as if it was single-character XOR. You already have code to do this. 
         // 8. For each chunk, the single-byte XOR key that produces the best looking histogram is 
         //    the repeating-key XOR key byte for that chunk. Put them together and you have the key. 
-    
+
         uint8_t* decryptionKey = new uint8_t[blockSize];
 
         int chunkLength = encryptedLength / blockSize;
@@ -463,7 +463,7 @@ void set1_challenge6() {
         {
             // make the chunk
             uint8_t* chunk = new uint8_t[chunkLength];
-            for (int i = 0; i < chunkLength; i ++)
+            for (int i = 0; i < chunkLength; i++)
             {
                 int byteIndex = i * blockSize + offset;
                 chunk[i] = encrypted[byteIndex];
@@ -504,9 +504,9 @@ void set1_challenge6() {
 //Do this with code.
 //You can obviously decrypt this using the OpenSSL command - line tool, but we're having you get ECB working in code for a reason. You'll need it a lot later on, and not just for attacking ECB.
 void set1_challenge7() {
-	// Every line is base 64 encoded 
-	// use while (infile >> line) to read line by line, then decrypt. 
-	// OpenSSL::Cipher
+    // Every line is base 64 encoded 
+    // use while (infile >> line) to read line by line, then decrypt. 
+    // OpenSSL::Cipher
 }
 
 int main(int argc, char *argv[], char *envp[]) {
